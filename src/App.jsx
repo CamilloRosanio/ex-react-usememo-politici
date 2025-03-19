@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 function App() {
 
   const [politicians, setPoliticians] = useState([]);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetch('https://boolean-spec-frontend.vercel.app/freetestapi/politicians')
@@ -11,13 +12,26 @@ function App() {
       .catch(err => console.error(err));
   }, [])
 
-  console.log(politicians);
+  const filteredPoliticians = useMemo(() => {
+    return politicians.filter(p => {
+      const inclName = p.name.toLowerCase().includes(search.toLowerCase());
+      const inclPosition = p.position.toLowerCase().includes(search.toLowerCase());
+      const inclBiography = p.biography.toLowerCase().includes(search.toLowerCase());
+      return inclName || inclPosition || inclBiography;
+    })
+  }, [politicians, search]);
 
   return (
     <>
       <h1 className="debug">Lista politici</h1>
+      <input
+        type="text"
+        placeholder="Cerca per nome o biografia"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
       <div>
-        {politicians.map(p =>
+        {filteredPoliticians.map(p =>
           <div key={p.id} className="debug">
             <img src={p.image} alt={p.name} />
             <h3>{p.name}</h3>
