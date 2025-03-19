@@ -37,6 +37,17 @@ function App() {
 
   const [politicians, setPoliticians] = useState([]);
   const [search, setSearch] = useState('');
+  const [selectedPositions, setSelectedPositions] = useState('');
+
+
+  const positions = useMemo(() => {
+    const uniquePositions = politicians.forEach(pol => {
+      if (!uniquePositions.includes(pol.position)) {
+        uniquePositions.push(pol.position);
+      }
+    });
+    return uniquePositions;
+  }, [politicians]);
 
   useEffect(() => {
     fetch('https://boolean-spec-frontend.vercel.app/freetestapi/politicians')
@@ -50,11 +61,13 @@ function App() {
   const filteredPoliticians = useMemo(() => {
     return politicians.filter(p => {
       const inclName = p.name.toLowerCase().includes(search.toLowerCase());
-      const inclPosition = p.position.toLowerCase().includes(search.toLowerCase());
+      // const inclPosition = p.position.toLowerCase().includes(search.toLowerCase());
       const inclBiography = p.biography.toLowerCase().includes(search.toLowerCase());
-      return inclName || inclPosition || inclBiography;
+      return inclName /*|| inclPosition*/ || inclBiography;
+
+      // AGGIUNGER LOGICA PER INCLUDERE "AND" POSITION SELECTED PER FILTRARE
     })
-  }, [politicians, search]);
+  }, [politicians, search, selectedPositions]);
 
   return (
     <>
@@ -65,6 +78,14 @@ function App() {
         value={search}
         onChange={e => setSearch(e.target.value)}
       />
+      <select
+        value={selectedPositions}
+        onChange={e => setSelectedPositions(e.target.value)}
+      >
+        {positions.map((pos, index) =>
+          (<option value={pos} key={index}>{pos}</option>)
+        )}
+      </select>
       <div>
         {filteredPoliticians.map(p =>
           <PoliticianCardMemo
