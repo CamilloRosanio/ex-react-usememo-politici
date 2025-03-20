@@ -20,7 +20,7 @@ const PoliticianCardMemoVar = memo(PoliticianCard);
 // MEMO - Senza Variabile
 /* Se voglio compattare il codice posso utilizzare MEMO direttamente sul COMPONENT, scrivendo coem segue.*/
 const PoliticianCardMemo = memo(({ name, image, position, biography }) => {
-  console.log('CARD stampata.')
+  console.log('CARD')
   return <>
     <div className="debug">
       <img src={image} alt={name} />
@@ -37,17 +37,7 @@ function App() {
 
   const [politicians, setPoliticians] = useState([]);
   const [search, setSearch] = useState('');
-  const [selectedPositions, setSelectedPositions] = useState('');
-
-
-  const positions = useMemo(() => {
-    const uniquePositions = politicians.forEach(pol => {
-      if (!uniquePositions.includes(pol.position)) {
-        uniquePositions.push(pol.position);
-      }
-    });
-    return uniquePositions;
-  }, [politicians]);
+  const [selectedPosition, setSelectedPosition] = useState('');
 
   useEffect(() => {
     fetch('https://boolean-spec-frontend.vercel.app/freetestapi/politicians')
@@ -56,18 +46,37 @@ function App() {
       .catch(err => console.error(err));
   }, [])
 
+  const positions = useMemo(() => {
+
+    // V1 - FOR EACH
+    // const uniquePositions = [];
+    // politicians.forEach(pol => {
+    //   if (!uniquePositions.includes(pol.position)) {
+    //     uniquePositions.push(pol.position);
+    //   }
+    // });
+    // return uniquePositions;
+
+    // V2 - REDUCE
+    return politicians.reduce((acc, pol) => {
+      if (!acc.includes(pol.position)) {
+        return [...acc, pol.position]
+      }
+      return acc;
+    }, [])
+
+  }, [politicians]);
+
   // USE-MEMO
   /*Ottimizzazione delle performance grazie all'utiizzo di use-memo.*/
   const filteredPoliticians = useMemo(() => {
     return politicians.filter(p => {
-      const inclName = p.name.toLowerCase().includes(search.toLowerCase());
-      // const inclPosition = p.position.toLowerCase().includes(search.toLowerCase());
-      const inclBiography = p.biography.toLowerCase().includes(search.toLowerCase());
-      return inclName /*|| inclPosition*/ || inclBiography;
-
-      // AGGIUNGER LOGICA PER INCLUDERE "AND" POSITION SELECTED PER FILTRARE
-    })
-  }, [politicians, search, selectedPositions]);
+      const isInName = p.name.toLowerCase().includes(search.toLowerCase());
+      const isInBio = p.biography.toLowerCase().includes(search.toLowerCase());
+      const isPositionvalid = selectedPosition === '' || selectedPosition === p.position;
+      return (isInName || isInBio) && isPositionvalid;
+    });
+  }, [politicians, search, selectedPosition]);
 
   return (
     <>
@@ -79,8 +88,8 @@ function App() {
         onChange={e => setSearch(e.target.value)}
       />
       <select
-        value={selectedPositions}
-        onChange={e => setSelectedPositions(e.target.value)}
+        value={selectedPosition}
+        onChange={e => setSelectedPosition(e.target.value)}
       >
         {positions.map((pos, index) =>
           (<option value={pos} key={index}>{pos}</option>)
